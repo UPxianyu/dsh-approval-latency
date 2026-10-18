@@ -48,10 +48,68 @@ machine's own answered approvals.
 The tool result itself is never rewritten — the audited `tool/result` event keeps the tool's
 own output — and a later listener's `block` feedback still wins.
 
-The three model-facing texts. Each is **one line with three facts**: how long the wait was, that
-it is human latency rather than a failure or a hint about the code, and that this result is all
-there is to judge. Explanations were cut deliberately — a paragraph about time invites the model
-to reason about time, which is the drift this exists to prevent, and it costs twice the tokens.
+### 2.1 When it is worth having
+
+**It earns its place when:**
+
+1. **You step away and the approval sits there** (measured here: **9m 8s**). The model gets "tool
+   result + that gap was a human answering a prompt" instead of a slow result of unknown origin.
+2. **Long or unattended agent runs** — you are in another window when the prompt appears.
+3. **The slow call is also the one whose result disappoints** — without a time explanation, "slow"
+   and "wrong" collapse into one story about the model's own work.
+4. **You do reject approvals** — a rejection almost always lands after you come back, and reads to
+   the model as "my approach was rejected".
+
+**It is not needed when:**
+
+1. **You always answer in seconds** — median here is **4.6 s**, so the default barely fires (2.2).
+2. **Nothing asked for approval** (reads, workspace writes) — never triggers.
+3. **The gap was not an approval** (you interrupted, the machine slept, the model queued) — out of
+   scope, and never reported.
+4. **`never` policy** — approvals are denied without waiting, so there is no wait to report.
+
+### 2.2 One real 9m 8s wait
+
+Measured on 2026-10-18: one `pwsh` call was held for **9 minutes 8 seconds** before it was approved.
+These are the two things the model received in that step:
+
+```text
+[tool/result]  marker read back: Synthetic approval test at 2026-10-18T14:30:34+08:00
+               directory removed again: True
+
+[user/message, source.kind = approval-latency]
+Approval wait: "pwsh" ran 9m 8s after the user approved it — human latency, not a tool failure,
+and not evidence about earlier work. Judge only this result.
+```
+
+**At that same step**, the runtime context's elapsed line was this:
+
+```text
+Elapsed since the preceding step context: unavailable.
+```
+
+So **without this notice the model has no idea nine minutes passed.** That is not a one-off: across
+6 session logs and 32 approvals on this machine, the elapsed value after a tool step (step ≥ 2) was
+`unavailable` **every time**; a number appears only between user messages. Here the notice is the
+only attribution source there is, at 156 characters ≈ **41 tokens**.
+
+It is in the durable log, replayable:
+
+```text
+seq 3217  user/message  source = {"kind":"approval-latency","form":"notice",
+                                  "summary":"approval wait 9m 8s before pwsh ran"}
+```
+
+An earlier incident left no log to mine: a ComfyUI render where the model's reasoning drifted far
+enough that the turn had to be killed. No time signal and no "this rejection may be stale" semantics
+existed then — the model had to invent a cause. That is the hole this closes.
+
+### 2.3 The model-facing texts
+
+Each is **one line with three facts**: how long the wait was, that it is human latency rather than a
+failure or a hint about the code, and that this result is all there is to judge. Explanations were
+cut deliberately — a paragraph about time invites the model to reason about time, which is the drift
+this exists to prevent, and it costs twice the tokens.
 
 Granted (154 chars ≈ **41 tokens**):
 
@@ -216,12 +274,27 @@ The bundle's patch ships these defaults:
 
 ### 4.6 Common recipes
 
+**Calibrated against measured data**: 6 session logs on this machine yield **32 approvals** — wait
+median **4.6 s**, p90 **15.0 s**, maximum **44.2 s**; all 32 were granted, **none rejected**. Replaying
+that history:
+
+| Config | Fires |
+|---|---|
+| fixed 30 s | 2 times |
+| fixed 10 s | 10 times |
+| adaptive (default) | 7 times, bar converging at **11.4 s** |
+
+The default therefore means "almost never interrupts, but always reports a real absence". If you
+regularly walk away (long unattended runs), `mode: fixed` + `fixedMs: 120000` matches the intuition
+better; if your approvals are always instant, the default is already quiet.
+
 | Want | Change |
 |---|---|
 | Deterministic, ignore history | `mode: fixed` (30 s) or `mode: fixed` + `fixedMs` |
 | More sensitive (flag a 10 s away) | `floorMs: 5000`, `multiplier: 2` |
 | Quieter (only clear absences) | `multiplier: 5`, `ceilingMs: 600000` |
 | Fewer rejection notices | `rejectionScale: 1` or `reportDenials: false` |
+| Only real absences | `mode: fixed` + `fixedMs: 120000` (2 min) |
 | See it working right away | `mode: fixed`, `fixedMs: 0` |
 
 Every emitted notice writes one debug line with `mode` (`cold` / `learned` / `fixed`), both
@@ -369,6 +442,7 @@ credentials, no say in any approval.
 ## 11. License
 
 [MIT](LICENSE)
+
 
 
 
