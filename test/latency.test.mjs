@@ -126,31 +126,31 @@ test('formatDuration stays readable at every scale', () => {
 
 test('buildNotice explains a grant without blaming the call', () => {
 	const notice = buildNotice({ toolName: 'bash', waitedMs: 402_000, outcome: 'allowed-once' });
-	assert.match(notice.text, /^Approval latency: "bash" waited 6m 42s/);
-	assert.match(notice.text, /human response time/);
-	assert.match(notice.text, /do not reopen earlier work/);
+	assert.match(notice.text, /^Approval wait: "bash" ran 6m 42s/);
+	assert.match(notice.text, /human latency/);
+	assert.match(notice.text, /Judge only this result/);
 	assert.equal(notice.summary, 'approval wait 6m 42s before bash ran');
 });
 
 test('buildNotice names every prompt when one call asked twice', () => {
 	const notice = buildNotice({ toolName: 'bash', waitedMs: 90_000, outcome: 'allowed-once', prompts: 2 });
-	assert.match(notice.text, /waited 1m 30s across 2 approval prompts/);
+	assert.match(notice.text, /ran 1m 30s after the user approved it \(2 prompts\)/);
 });
 
 test('buildNotice treats a late rejection as possibly stale, not as a verdict', () => {
 	const notice = buildNotice({ toolName: 'write', waitedMs: 250_000, outcome: 'rejected' });
-	assert.match(notice.text, /rejected the call/);
-	assert.match(notice.text, /stale or accidental answer/);
-	assert.match(notice.text, /do not conclude that the call itself was wrong/);
+	assert.match(notice.text, /rejected "write" after 4m 10s/);
+	assert.match(notice.text, /may be stale/);
+	assert.match(notice.text, /check it against what was asked/);
 });
 
 test('buildNotice separates a cancelled prompt from a decision', () => {
 	const cancelled = buildNotice({ toolName: 'pwsh', waitedMs: 60_000, outcome: 'cancelled' });
 	assert.match(cancelled.text, /never ran/);
-	assert.match(cancelled.text, /not evidence about the call/);
+	assert.match(cancelled.text, /not evidence about the code/);
 
 	const unavailable = buildNotice({ toolName: 'pwsh', waitedMs: 60_000, outcome: 'unavailable' });
-	assert.match(unavailable.text, /coordination problem/);
+	assert.match(unavailable.text, /coordination gap/);
 });
 
 test('buildNotice bounds a very long tool name and summary', () => {
@@ -415,3 +415,17 @@ if (z === undefined) {
 		assert.equal('thresholdMs' in Config.dict, false);
 	});
 }
+
+
+test('every notice stays short enough to read as a flag, not a conversation', () => {
+	const limits = { 'allowed-once': 200, rejected: 200, cancelled: 170, unavailable: 170 };
+	for (const [outcome, limit] of Object.entries(limits)) {
+		const notice = buildNotice({ toolName: 'pwsh', waitedMs: 402_000, outcome });
+		assert.ok(
+			notice.text.length <= limit,
+			`${outcome} notice is ${notice.text.length} chars, over the ${limit} budget: ${notice.text}`,
+		);
+		assert.ok(notice.text.startsWith('Approval wait: '), `${outcome} notice must open with the tag`);
+		assert.ok(notice.text.split('.').length <= 4, `${outcome} notice must stay at 3 sentences or fewer`);
+	}
+});

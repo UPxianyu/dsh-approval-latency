@@ -48,28 +48,34 @@ machine's own answered approvals.
 The tool result itself is never rewritten — the audited `tool/result` event keeps the tool's
 own output — and a later listener's `block` feedback still wins.
 
-The three model-facing texts:
+The three model-facing texts. Each is **one line with three facts**: how long the wait was, that
+it is human latency rather than a failure or a hint about the code, and that this result is all
+there is to judge. Explanations were cut deliberately — a paragraph about time invites the model
+to reason about time, which is the drift this exists to prevent, and it costs twice the tokens.
+
+Granted (154 chars ≈ **41 tokens**):
 
 ```markdown
-Approval latency: "bash" waited 6m 42s for the user to answer its approval prompt before it
-could run. That gap is human response time — not a tool failure, a timeout, or evidence that
-this call, its arguments, or your earlier findings were wrong. Judge this result on its own
-content, and do not reopen earlier work merely because time passed.
+Approval wait: "bash" ran 2m 8s after the user approved it — human latency, not a tool failure,
+and not evidence about earlier work. Judge only this result.
 ```
+
+Rejected (154 chars ≈ 41 tokens; note there is no "go ask the user" step, only the fact):
 
 ```markdown
-Approval latency: the user answered the approval prompt for "write" after 4m 10s and rejected
-the call. A "no" this late can be a stale or accidental answer rather than a verdict on the
-call: if the rejection contradicts what the user asked for, ask them before reworking the
-approach, and do not conclude that the call itself was wrong.
+Approval wait: the user rejected "write" after 4m 10s. A "no" that late may be stale rather than
+a verdict on your approach — check it against what was asked.
 ```
+
+Cancelled / no answerer (127 / 116 chars ≈ 33 / 31 tokens):
 
 ```markdown
-Approval latency: the approval prompt for "pwsh" stayed open for 1m 0s and ended without an
-answer, so the call never ran. That gap is human or scheduling latency — not evidence about
-the call or the code it touches.
+Approval wait: "pwsh" stayed unapproved for 1m 0s and was cancelled, so it never ran.
+Human latency, not evidence about the code.
 ```
 
+> The length budget is enforced: `test/latency.test.mjs` asserts each variant stays under
+> 200 / 200 / 170 / 170 characters, within three sentences, and opens with `Approval wait: `.
 ## 3. Install
 
 ```sh
@@ -334,7 +340,7 @@ Settings page first:
 Then the notice itself:
 
 5. Trigger an approval, switch to another window, wait 40+ seconds, then click "allow once".
-6. After that step's tool result there should be one `Approval latency: ...` message whose
+6. After that step's tool result there should be one `Approval wait: ...` message whose
    duration matches your wait.
 7. Repeat and click "reject" → the "possibly stale" variant appears (lower bar).
 8. Answer three approvals instantly, then wait 40 s on a fourth → still reported, but the
@@ -363,6 +369,7 @@ credentials, no say in any approval.
 ## 11. License
 
 [MIT](LICENSE)
+
 
 
 

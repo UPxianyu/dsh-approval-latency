@@ -56,28 +56,32 @@ Elapsed since the preceding model-visible message: 6m 42s
 
 ### 模型实际读到的文本（三种变体）
 
-通过：
+每条都是**一行、三件事**：等了多久 → 这是人的延迟而不是失败/代码问题 → 只判这次结果。
+解释性从句全部砍掉：一段「关于时间的说明」本身就在邀请模型讨论时间，而这正是要避免的跑偏，还白付一倍 token。
+
+通过（154 字符 ≈ **41 token**）：
 
 ```markdown
-Approval latency: "bash" waited 6m 42s for the user to answer its approval prompt before it
-could run. That gap is human response time — not a tool failure, a timeout, or evidence that
-this call, its arguments, or your earlier findings were wrong. Judge this result on its own
-content, and do not reopen earlier work merely because time passed.
+Approval wait: "bash" ran 2m 8s after the user approved it — human latency, not a tool failure,
+and not evidence about earlier work. Judge only this result.
 ```
 
-拒绝：
+拒绝（154 字符 ≈ 41 token；注意这里没有「先去问用户」，只陈述事实）：
 
 ```markdown
-Approval latency: the user answered the approval prompt for "write" after 4m 10s and rejected
-the call. A "no" this late can be a stale or accidental answer rather than a verdict on the
-call: if the rejection contradicts what the user asked for, ask them before reworking the
-approach, and do not conclude that the call itself was wrong.
+Approval wait: the user rejected "write" after 4m 10s. A "no" that late may be stale rather than
+a verdict on your approach — check it against what was asked.
 ```
 
-取消 / 无人应答：
+取消 / 无人应答（127 / 116 字符 ≈ 33 / 31 token）：
 
 ```markdown
-Approval latency: the approval prompt for "pwsh" stayed open for 1m 0s and ended without an
+Approval wait: "pwsh" stayed unapproved for 1m 0s and was cancelled, so it never ran.
+Human latency, not evidence about the code.
+```
+
+> 长度预算是硬约束：`test/latency.test.mjs` 断言四种变体分别不超过 200 / 200 / 170 / 170 字符，
+> 且不超过 3 句、必须以 `Approval wait: ` 开头——防止以后越写越长。
 answer, so the call never ran. That gap is human or scheduling latency — not evidence about
 the call or the code it touches.
 ```
@@ -368,7 +372,7 @@ approval/request 计时 → tools/post-execute 取回 → 先用历史算门槛 
 **再看提示本身**：
 
 5. 触发一次需要审批的操作，把 DSH 窗口切到后台，**等 40 秒以上**，再回来点「允许一次」。
-6. 看这一步之后（工具结果之后）是否多出一条 `Approval latency: ...` 消息，时长与你实际等待相符。
+6. 看这一步之后（工具结果之后）是否多出一条 `Approval wait: ...` 消息，时长与你实际等待相符。
 7. 再触发一次，等够时间后点「拒绝」→ 应出现「可能是过期/误触」的变体（拒绝门槛更低）。
 8. 连续快速点掉 3 次审批，再等 40 秒点一次 → 仍应回传，但 debug 日志里的 `mode` 已从 `cold`
    变成 `learned`，`baseline` 接近你秒回的速度。
@@ -395,6 +399,7 @@ approval/request 计时 → tools/post-execute 取回 → 先用历史算门槛 
 ## 11. 许可
 
 [MIT](LICENSE)
+
 
 
 

@@ -70,8 +70,8 @@ test('a long approval wait reaches the model as one appended notice', async () =
 	});
 	assert.equal(notice.content.length, 1);
 	assert.equal(notice.content[0].type, 'text');
-	assert.match(notice.content[0].text, /^Approval latency: "bash"/);
-	assert.match(notice.content[0].text, /human response time/);
+	assert.match(notice.content[0].text, /^Approval wait: "bash"/);
+	assert.match(notice.content[0].text, /human latency/);
 	assert.ok(notice.source.summary.length <= 120);
 });
 
@@ -100,7 +100,7 @@ test('a late rejection is reported as a possibly stale answer', async () => {
 		{ kind: 'accept', content: [{ type: 'text', text: 'Error: the user rejected tool "bash"' }] },
 	);
 	assert.equal(decision.additionalContexts.length, 1);
-	assert.match(decision.additionalContexts[0].content[0].text, /stale or accidental answer/);
+	assert.match(decision.additionalContexts[0].content[0].text, /may be stale/);
 });
 
 test('reportDenials: false keeps grants and drops denials', async () => {
@@ -315,5 +315,6 @@ test('an unreadable live value keeps the last good settings and warns', async ()
 		`expected a warn line, got ${JSON.stringify(warnings)}`,
 	);
 });
+
 
 

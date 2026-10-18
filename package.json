@@ -1,6 +1,6 @@
 {
   "name": "dsh-approval-latency",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Tell the model when a tool call waited a long time for a human approval, so a late answer is not mistaken for broken code · 审批等太久时自动回传「这是人类延迟，不是代码有问题」，设置页可切换自适应 / 固定时长",
   "type": "module",
   "license": "MIT",
@@ -71,5 +71,6 @@
     }
   }
 }
+
 
 
