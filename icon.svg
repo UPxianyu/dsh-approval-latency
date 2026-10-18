@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+  <title id="title">Approval Wait Notice</title>
+  <rect x="5" y="13" width="54" height="38" rx="9" fill="#EEF2FF" stroke="#4D6BFE" stroke-width="3"/>
+  <circle cx="24" cy="32" r="10.5" fill="#FFFFFF" stroke="#4D6BFE" stroke-width="3"/>
+  <path d="M24 26.5V32L28 35" fill="none" stroke="#4D6BFE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40 28.5h12M40 35.5h12" fill="none" stroke="#4D6BFE" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="48" cy="44" r="8" fill="#FFB020"/>
+  <path d="M48 39.5V44.2M48 47.6v.6" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+</svg>

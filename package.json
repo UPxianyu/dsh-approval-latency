@@ -1,0 +1,75 @@
+{
+  "name": "dsh-approval-latency",
+  "version": "0.4.1",
+  "description": "Tell the model when a tool call waited a long time for a human approval, so a late answer is not mistaken for broken code · 审批等太久时自动回传「这是人类延迟，不是代码有问题」，设置页可切换自适应 / 固定时长",
+  "type": "module",
+  "license": "MIT",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/latency.js",
+    "lib/plugin.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "README.en.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "approval",
+    "latency",
+    "tools",
+    "context",
+    "settings"
+  ],
+  "scripts": {
+    "check": "node --check index.js && node --check client.js && node --check lib/latency.js && node --check lib/plugin.js",
+    "test": "node --test test/",
+    "test:inprocess": "node test/latency.test.mjs && node test/plugin.test.mjs && node test/client.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UPxianyu/dsh-approval-latency.git"
+  },
+  "homepage": "https://github.com/UPxianyu/dsh-approval-latency#readme",
+  "bugs": {
+    "url": "https://github.com/UPxianyu/dsh-approval-latency/issues"
+  },
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.1-rc.2 <0.3.0-0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": ">=3.18.2 <4"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  }
+}
+
+

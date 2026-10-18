@@ -1,0 +1,19 @@
+# 本 bundle 新增的插件行。安装后可在 profile 的 cordis.patch.yml 中用同 id 覆盖
+# config（同 id 覆盖会**整块替换** config，所以覆盖时只写要改的字段，其余回落到这里的默认值）。
+- insert:
+    - id: approval-latency
+      name: dsh-approval-latency
+      config:
+        # 阈值模式：auto = 自适应（用本机回答审批的速度学出来）；fixed = 固定用 fixedMs。
+        mode: auto
+        # fixed 模式的固定时长（毫秒）。想固定就直接改 mode: fixed；这里不写 mode 时，
+        # 只要填了 fixedMs（或旧的 thresholdMs 别名），也会按 fixed 处理。
+        fixedMs: 30000
+        # 以下 4 项只在 mode: auto 下生效。
+        floorMs: 10000         # 门槛下限：低于它的等待永不打扰
+        ceilingMs: 300000      # 门槛上限，也是单条样本的截断值
+        multiplier: 3          # 「异常长」= 几倍本机中位数
+        minSamples: 3          # 攒够几条真实回答才从冷启动切到学习值
+        # 两种模式都生效。
+        rejectionScale: 0.5    # 拒绝门槛 = 通过门槛 × 该系数
+        reportDenials: true    # false 时只回传「等到后通过」

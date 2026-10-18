@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Approval Wait Notice",
+    "description": "Mode is adjustable: adaptive or a fixed duration, set by opening this row. Tells the model when a tool call waited for a human approval, so a late answer is not mistaken for broken code."
+  }
+}

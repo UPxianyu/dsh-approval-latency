@@ -1,0 +1,4 @@
+# Keep the repository consistent across platforms; the package is plain UTF-8 text.
+* text=auto eol=lf
+*.png binary
+*.ico binary
